@@ -36,7 +36,7 @@ pub fn app(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn MainButton<'a>(
-    cx: Scope<'a, MainButtonProps<'a>>,
+    cx: Scope<'a>,
     onclick: EventHandler<'a, MouseEvent>,
     children: Element<'a>,
     text: Option<String>,
