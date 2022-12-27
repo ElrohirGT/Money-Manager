@@ -1,0 +1,18 @@
+[package]
+name = "money_manager_web"
+version = "0.1.0"
+edition = "2021"
+authors = ["ElrohirGT"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+money_manager_common = { version = "0.1.0", path = "../money_manager_common" }
+#Dioxus deps
+dioxus = { version = "0.2.4", features = ["web"] }
+
+log = "0.4.17"
+
+#WASM Logging
+wasm-logger = "0.2.0"
+console_error_panic_hook = "0.1.7"

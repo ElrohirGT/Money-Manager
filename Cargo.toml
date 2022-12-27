@@ -1,0 +1,2 @@
+[workspace]
+members = ["money_manager_desk", "money_manager_common", "money_manager_web"]
