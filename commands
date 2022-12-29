@@ -1,0 +1,4 @@
+# Assume all commands must be executed from the workspace dir
+
+# Regenerate tailwind css, this should be done already by trunk
+tailwindcss -i css/tailwind.css -o css/tailwind_compiled.css

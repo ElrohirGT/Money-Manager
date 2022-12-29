@@ -1,0 +1,17 @@
+[build]
+target = "index.html"
+dist = "dist"
+
+[watch]
+watch = [".", "../money_manager_common/src/"]
+# ignore = ["css/tailwind_compiled.css"]
+
+[[hooks]]
+stage = "pre_build"
+# I'm not sure why we can't just invoke tailwindcss directly, but that doesn't
+# seem to work for some reason.
+command = "sh"
+command_arguments = [
+    "-c",
+    "tailwindcss --config ../tailwind.config.js -i ../css/tailwind.css -o ../css/tailwind_compiled.css && echo $PWD",
+]
