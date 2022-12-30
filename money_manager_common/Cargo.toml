@@ -6,13 +6,19 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+reqwest = { version = "0.11.13", features = ["json"] }
+
 dioxus = { version = "0.2.4", features = ["router", "fermi"] }
-dioxus-free-icons = { version = "0.5.1", features = [
+dioxus-free-icons = { version = "0.5.2", features = [
     "hero-icons-solid",
     "font-awesome-solid",
 ] }
 
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.91"
 
 log = "0.4.17"
+
+chrono = { version = "0.4.23", features = ["serde"] }
+#Random data generation
+getrandom = { version = "0.2.8", features = ["js"] }
+rand = { version = "0.8.5", features = ["log"] }
