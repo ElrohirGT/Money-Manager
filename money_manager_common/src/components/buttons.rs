@@ -103,14 +103,14 @@ fn Button<'a>(
         Some(route) => rsx!(
             cx,
             Link {
-                class: "{class}",
+                class: "{class} flex justify-center",
                 to: route,
                 "{text}",
                 children,
             }
         ),
         None => rsx!(cx, button {
-            class: "{class}",
+            class: "{class} flex justify-center",
             onclick: move |ev| {
                 if let Some(callback) = onclick {
                     callback.call(ev)
