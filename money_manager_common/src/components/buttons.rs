@@ -48,13 +48,15 @@ pub fn SecondaryLink<'a>(
 pub fn MainButton<'a>(
     cx: Scope<'a>,
     onclick: Option<EventHandler<'a, MouseEvent>>,
+    class: Option<&'a str>,
     children: Element<'a>,
     text: Option<&'a str>,
 ) -> Element {
+    let class = class.unwrap_or("");
     rsx!(
         cx,
         Button {
-            class: "{MAIN_BUTTON_CLASS}",
+            class: "{MAIN_BUTTON_CLASS} {class}",
             onclick: move |ev| {
                 if let Some(callback) = onclick {
                     callback.call(ev)
@@ -71,13 +73,15 @@ pub fn MainButton<'a>(
 pub fn SecondaryButton<'a>(
     cx: Scope<'a>,
     onclick: Option<EventHandler<'a, MouseEvent>>,
+    class: Option<&'a str>,
     children: Element<'a>,
     text: Option<&'a str>,
 ) -> Element {
+    let class = class.unwrap_or("");
     rsx!(
         cx,
         Button {
-            class: "{SECONDARY_BUTTON_CLASS}",
+            class: "{SECONDARY_BUTTON_CLASS} {class}",
             onclick: move |ev| {
                 if let Some(callback) = onclick {
                     callback.call(ev)

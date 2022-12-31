@@ -8,6 +8,7 @@ use crate::{
     models::{Contact, DashboardData, Debt, DebtType},
     USER,
 };
+
 use dioxus::prelude::*;
 use dioxus_free_icons::{icons::fa_solid_icons::*, Icon};
 use rand::{distributions::Uniform, prelude::Distribution, thread_rng, Rng};
@@ -27,7 +28,7 @@ pub fn DashboardPage(cx: Scope) -> Element {
         Some(Ok(DashboardData {
             personal_debt,
             contact_debt,
-            history,
+            active_debts,
         })) => {
             let total = personal_debt + contact_debt;
             let profit = contact_debt - personal_debt;
@@ -67,9 +68,10 @@ pub fn DashboardPage(cx: Scope) -> Element {
                         icon: FaPlus
                     }
                 },
+                h1 { class: "p-2 text-xl font-bold text-center", "Deudas Activas" }
                 DebtList {
                     class: "overflow-y-auto max-h-96",
-                    debts: &history
+                    debts: active_debts
                 }
             )
         }
@@ -97,8 +99,8 @@ async fn get_dashboard_data(user_id: u32) -> Result<DashboardData, std::io::Erro
     let mut rng = thread_rng();
     let contacts: Vec<Contact> = (0..12).map(|_| rng.gen()).collect();
 
-    let range = Uniform::new(1, 5);
-    let history: Vec<Debt> = contacts
+    let range = Uniform::new(3, 8);
+    let mut active_debts: Vec<Debt> = contacts
         .iter()
         .map(|c| {
             (0..range.sample(&mut rng))
@@ -107,13 +109,15 @@ async fn get_dashboard_data(user_id: u32) -> Result<DashboardData, std::io::Erro
                     debt.contact = c.clone();
                     debt
                 })
+                .filter(|d| !d.is_paid)
                 .collect::<Vec<Debt>>()
         })
         .flatten()
         .collect();
+    active_debts.sort_by(|debta, debtb| debtb.date.cmp(&debta.date));
 
     Ok(DashboardData {
-        personal_debt: history
+        personal_debt: active_debts
             .iter()
             .filter(|d| {
                 if let DebtType::PersonalDebt = d.debt_type {
@@ -124,7 +128,7 @@ async fn get_dashboard_data(user_id: u32) -> Result<DashboardData, std::io::Erro
             })
             .map(|d| d.amount)
             .sum(),
-        contact_debt: history
+        contact_debt: active_debts
             .iter()
             .filter(|d| {
                 if let DebtType::ContactDebt = d.debt_type {
@@ -135,6 +139,6 @@ async fn get_dashboard_data(user_id: u32) -> Result<DashboardData, std::io::Erro
             })
             .map(|d| d.amount)
             .sum(),
-        history,
+        active_debts,
     })
 }
