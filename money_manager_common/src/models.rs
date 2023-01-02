@@ -1,15 +1,21 @@
+use std::{fmt::Display, ops};
+
 use chrono::{DateTime, Local, TimeZone};
 use rand::{
     distributions::{Standard, Uniform},
     prelude::Distribution,
     seq::SliceRandom,
 };
+use rust_decimal::{prelude::FromPrimitive, Decimal};
+
+use thousands::Separable;
 
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct User {
     pub id: u32,
     pub username: String,
     pub email: String,
+    pub preferred_coin: Coin,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -20,8 +26,8 @@ pub struct Contact {
 
 #[derive(Debug, Default)]
 pub struct DashboardData {
-    pub personal_debt: f64,
-    pub contact_debt: f64,
+    pub personal_debt: MoneyAmount,
+    pub contact_debt: MoneyAmount,
     pub active_debts: Vec<Debt>,
 }
 
@@ -35,10 +41,84 @@ pub struct DateDivision {
 pub struct Debt {
     pub id: u32,
     pub contact: Contact,
-    pub amount: f64,
+    pub amount: MoneyAmount,
     pub debt_type: DebtType,
     pub date: DateTime<Local>,
     pub is_paid: bool,
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct MoneyAmount {
+    pub amount: f64,
+    pub coin: Coin,
+}
+
+impl ops::Add<&MoneyAmount> for &MoneyAmount {
+    type Output = MoneyAmount;
+
+    fn add(self, rhs: &MoneyAmount) -> Self::Output {
+        let coin = if rhs.coin == self.coin {
+            self.coin.clone()
+        } else {
+            Coin::Unknown
+        };
+        let amount = self.amount + rhs.amount;
+
+        MoneyAmount { coin, amount }
+    }
+}
+impl ops::Sub<&MoneyAmount> for &MoneyAmount {
+    type Output = MoneyAmount;
+
+    fn sub(self, rhs: &MoneyAmount) -> Self::Output {
+        let coin = if rhs.coin == self.coin {
+            self.coin.clone()
+        } else {
+            Coin::Unknown
+        };
+        let amount = self.amount - rhs.amount;
+
+        MoneyAmount { coin, amount }
+    }
+}
+
+impl Display for MoneyAmount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let formatted_amount = Decimal::from_f64(self.amount)
+            .expect("Number couldn't be converted to Decimal!")
+            .abs()
+            .round_dp(2)
+            .separate_with_commas();
+        write!(f, "{}. {}", self.coin, formatted_amount)
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Coin {
+    #[default]
+    Quetzal,
+    Dollar,
+    Unknown,
+}
+
+impl Display for Coin {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Coin::Quetzal => write!(f, "Q"),
+            Coin::Dollar => write!(f, "$"),
+            Coin::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
+impl Coin {
+    pub fn to_currency_code(&self) -> &'static str {
+        match self {
+            Coin::Quetzal => "GTQ",
+            Coin::Dollar => "USD",
+            Coin::Unknown => "Unknown",
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -61,6 +141,25 @@ static NAMES: [&str; 10] = [
     "Alan Leon",
 ];
 
+impl Distribution<MoneyAmount> for Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> MoneyAmount {
+        let dist = Uniform::new(10.0, 750.0);
+        let amount = dist.sample(rng);
+        let coin = rng.gen();
+        MoneyAmount { amount, coin }
+    }
+}
+
+impl Distribution<Coin> for Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Coin {
+        if rng.gen_bool(0.5) {
+            Coin::Quetzal
+        } else {
+            Coin::Dollar
+        }
+    }
+}
+
 impl Distribution<Contact> for Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Contact {
         let id = rng.gen();
@@ -72,7 +171,6 @@ impl Distribution<Contact> for Standard {
 
 impl Distribution<Debt> for Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Debt {
-        let dist = Uniform::new(10.0, 750.0);
         let year_dist = Uniform::new_inclusive(2018, 2022);
         let month_dist = Uniform::new_inclusive(1, 12);
         let day_dist = Uniform::new_inclusive(1, 27);
@@ -87,10 +185,10 @@ impl Distribution<Debt> for Standard {
         let seconds = minute_dist.sample(rng);
 
         let id = rng.gen();
-        let amount = dist.sample(rng);
         let debt_type = rng.gen();
         let contact = rng.gen();
         let is_paid = rng.gen();
+        let amount = rng.gen();
         log::debug!(
             "Trying to create date: {}/{}/{}T{}:{}:{}",
             year,

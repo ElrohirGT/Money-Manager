@@ -8,6 +8,8 @@ pub mod register_page;
 
 use dioxus::prelude::*;
 
+use crate::models::MoneyAmount;
+
 #[derive(PartialEq)]
 pub struct ComparisonBarItem<'a> {
     pub color: &'a str,
@@ -38,14 +40,14 @@ pub static FAIL_BACKGROUND_COLOR: &str = "bg-red-500";
 
 #[inline_props]
 #[allow(non_snake_case)]
-pub fn ProfitDisplayer(cx: Scope, profit: f64) -> Element {
-    let (symbol, text_color) = if profit < &0. {
-        ("", FAIL_TEXT_COLOR)
+pub fn ProfitDisplayer(cx: Scope, profit: MoneyAmount) -> Element<'a> {
+    let (symbol, text_color) = if profit.amount < 0. {
+        ("-", FAIL_TEXT_COLOR)
     } else {
         ("+", SUCCESS_TEXT_COLOR)
     };
     rsx!(cx, p {
         class: "{text_color} font-bold text-center",
-        "{symbol}{profit:.2}"
+        "{symbol}{profit}"
     })
 }

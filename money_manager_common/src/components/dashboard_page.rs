@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     components::{
         buttons::{MainButton, SecondaryButton},
@@ -5,8 +7,8 @@ use crate::{
         loadings::TextLoading,
         ComparisonBar, ProfitDisplayer,
     },
-    models::{Contact, DashboardData, Debt, DebtType},
-    USER,
+    models::{Coin, Contact, DashboardData, Debt, DebtType, MoneyAmount, User},
+    EXCHANGE_RATES, USER,
 };
 
 use dioxus::prelude::*;
@@ -18,11 +20,15 @@ use super::{ComparisonBarItem, FAIL_BACKGROUND_COLOR, SUCCESS_BACKGROUND_COLOR};
 #[allow(non_snake_case)]
 pub fn DashboardPage(cx: Scope) -> Element {
     let user = use_read(&cx, USER);
+    let exchanges = use_read(&cx, EXCHANGE_RATES);
+
     if user.username.is_empty() {
         return rsx!(cx, Redirect { to: "/" });
     }
 
-    let request = use_future(&cx, user, |u| async move { get_dashboard_data(u.id).await });
+    let request = use_future(&cx, (user, exchanges), |(u, e)| async move {
+        get_dashboard_data(u, e).await
+    });
 
     let components = match request.value() {
         Some(Ok(DashboardData {
@@ -33,8 +39,8 @@ pub fn DashboardPage(cx: Scope) -> Element {
             let total = personal_debt + contact_debt;
             let profit = contact_debt - personal_debt;
 
-            let personal_percentage = (personal_debt / total) as f32;
-            let contact_percentage = (contact_debt / total) as f32;
+            let personal_percentage = (personal_debt.amount / total.amount) as f32;
+            let contact_percentage = (contact_debt.amount / total.amount) as f32;
 
             let bar_items = vec![
                 ComparisonBarItem {
@@ -91,7 +97,10 @@ pub fn DashboardPage(cx: Scope) -> Element {
     )
 }
 
-async fn get_dashboard_data(user_id: u32) -> Result<DashboardData, std::io::Error> {
+async fn get_dashboard_data(
+    user: User,
+    exchanges: HashMap<Coin, f64>,
+) -> Result<DashboardData, std::io::Error> {
     // let api_key = "730722fe";
     //TODO Actually call the app API instead of this dummy data
     let _ = reqwest::get("http://www.omdbapi.com/?i=tt3896198&apikey=730722fe").await;
@@ -116,29 +125,38 @@ async fn get_dashboard_data(user_id: u32) -> Result<DashboardData, std::io::Erro
         .collect();
     active_debts.sort_by(|debta, debtb| debtb.date.cmp(&debta.date));
 
+    let personal_debt_amount = active_debts
+        .iter()
+        .filter(|d| {
+            if let DebtType::PersonalDebt = d.debt_type {
+                true
+            } else {
+                false
+            }
+        })
+        .map(|d| d.amount.amount * exchanges[&d.amount.coin])
+        .sum();
+    let contact_debt_amount = active_debts
+        .iter()
+        .filter(|d| {
+            if let DebtType::ContactDebt = d.debt_type {
+                true
+            } else {
+                false
+            }
+        })
+        .map(|d| d.amount.amount * exchanges[&d.amount.coin])
+        .sum();
+
     Ok(DashboardData {
-        personal_debt: active_debts
-            .iter()
-            .filter(|d| {
-                if let DebtType::PersonalDebt = d.debt_type {
-                    true
-                } else {
-                    false
-                }
-            })
-            .map(|d| d.amount)
-            .sum(),
-        contact_debt: active_debts
-            .iter()
-            .filter(|d| {
-                if let DebtType::ContactDebt = d.debt_type {
-                    true
-                } else {
-                    false
-                }
-            })
-            .map(|d| d.amount)
-            .sum(),
+        personal_debt: MoneyAmount {
+            coin: user.preferred_coin.clone(),
+            amount: personal_debt_amount,
+        },
+        contact_debt: MoneyAmount {
+            coin: user.preferred_coin,
+            amount: contact_debt_amount,
+        },
         active_debts,
     })
 }

@@ -15,10 +15,14 @@ dioxus-free-icons = { version = "0.5.2", features = [
 ] }
 
 serde = { version = "1.0.152", features = ["derive"] }
-
 log = "0.4.17"
-
 chrono = { version = "0.4.23", features = ["serde", "unstable-locales"] }
+
 #Random data generation
 getrandom = { version = "0.2.8", features = ["js"] }
 rand = { version = "0.8.5", features = ["log"] }
+
+#Working with numbers
+thousands = "0.2.0"
+rust_decimal = "1.27.0"
+rust_decimal_macros = "1.27.0"
