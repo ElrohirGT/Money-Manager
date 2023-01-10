@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     components::{
-        buttons::{MainButton, SecondaryButton},
+        buttons::{MainLink, PrimaryButton, SecondaryButton},
         debt_list::DebtList,
         loadings::TextLoading,
         ComparisonBar, ProfitDisplayer,
@@ -57,21 +57,22 @@ pub fn DashboardPage(cx: Scope) -> Element {
                 h1 { "{user.username}" },
                 h2 { "{user.email}" },
                 ComparisonBar { items: bar_items },
-                ProfitDisplayer { profit: profit }
-                MainButton {
+                ProfitDisplayer { profit: profit, editable: false }
+                MainLink {
                     Icon {
                         width: 30,
                         height: 30,
                         fill: "white",
-                        icon: FaMagnifyingGlass
+                        icon: FaPlus
                     }
+                    to: "/debt/new"
                 },
                 SecondaryButton {
                     Icon {
                         width: 30,
                         height: 30,
                         fill: "white",
-                        icon: FaPlus
+                        icon: FaMagnifyingGlass
                     }
                 },
                 h1 { class: "p-2 text-xl font-bold text-center", "Deudas Activas" }

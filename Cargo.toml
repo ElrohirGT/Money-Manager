@@ -1,2 +1,8 @@
 [workspace]
 members = ["money_manager_desk", "money_manager_common", "money_manager_web"]
+
+# https://github.com/DioxusLabs/dioxus/issues/304
+# This is here because the onfocusout and other events won't work on web,
+# this branch fixes the issue until a new dioxus version is uploaded with the fix
+[patch.crates-io]
+dioxus = { git = "https://github.com/rMazeiks/dioxus.git", branch = "fix-web-missing-event-types" }

@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use dioxus_free_icons::{icons::fa_solid_icons::*, Icon};
 
 use crate::{
-    components::buttons::MainButton,
+    components::buttons::PrimaryButton,
     models::{Debt, DebtType},
 };
 
@@ -29,13 +29,13 @@ pub fn DebtListItem<'a>(cx: Scope, debt: &'a Debt) -> Element {
         DebtType::ContactDebt => ("+", SUCCESS_TEXT_COLOR),
     };
 
-    let date = debt.date.format_localized("%A %e %Y, %T", Locale::es_GT);
+    let date = debt.date.format_localized("%e %B %Y, %T", Locale::es_GT);
     let (paid_effect, pay_button) = if debt.is_paid {
         ("text-opacity-25", rsx!(div {}))
     } else {
         (
             "",
-            rsx!(MainButton {
+            rsx!(PrimaryButton {
                 class: "flex-col align-center"
                 Icon {
                     width: 15,

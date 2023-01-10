@@ -11,12 +11,14 @@ pub fn MainLink<'a>(
     cx: Scope<'a>,
     children: Element<'a>,
     text: Option<&'a str>,
+    class: Option<&'a str>,
     to: &'a str,
 ) -> Element {
+    let class = class.unwrap_or("");
     rsx!(
         cx,
         Button {
-            class: "{MAIN_BUTTON_CLASS}",
+            class: "{MAIN_BUTTON_CLASS} {class}",
             text: text.unwrap_or(""),
             to: "{to}",
             children
@@ -30,12 +32,14 @@ pub fn SecondaryLink<'a>(
     cx: Scope<'a>,
     children: Element<'a>,
     text: Option<&'a str>,
+    class: Option<&'a str>,
     to: &'a str,
 ) -> Element {
+    let class = class.unwrap_or("");
     rsx!(
         cx,
         Button {
-            class: "{SECONDARY_BUTTON_CLASS}",
+            class: "{SECONDARY_BUTTON_CLASS} {class}",
             text: text.unwrap_or(""),
             to: "{to}",
             children
@@ -45,7 +49,7 @@ pub fn SecondaryLink<'a>(
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn MainButton<'a>(
+pub fn PrimaryButton<'a>(
     cx: Scope<'a>,
     onclick: Option<EventHandler<'a, MouseEvent>>,
     class: Option<&'a str>,

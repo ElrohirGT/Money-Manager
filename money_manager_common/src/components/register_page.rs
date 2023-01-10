@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::components::buttons::{MainButton, SecondaryLink};
+use crate::components::{
+    buttons::{PrimaryButton, SecondaryLink},
+    inputs::PreferredCurrencySelector,
+};
 
 #[allow(non_snake_case)]
 pub fn RegisterPage(cx: Scope) -> Element {
@@ -21,20 +24,14 @@ pub fn RegisterPage(cx: Scope) -> Element {
                 class: "text-black",
                 placeholder: "Contraseña"
             },
-            select {
-                class: "text-black p-2",
-                // placeholder: "--Moneda Preferida--",
-                option { value: "", disabled: "true", selected: "true", "--Moneda Preferida--" }
-                option { value: "GTQ", "Quetzal" },
-                option { value: "USD", "US Dollar" }
-            }
+            PreferredCurrencySelector {},
             div {
                 class: "flex flex-row gap-x-2",
                 SecondaryLink {
                     text: "Iniciar sesión",
                     to: "/"
                 }
-                MainButton {
+                PrimaryButton {
                     text: "Registrarse"
                 }
             }

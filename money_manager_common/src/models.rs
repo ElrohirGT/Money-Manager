@@ -1,14 +1,16 @@
-use std::{fmt::Display, ops};
+use std::{fmt::Display, ops, str::FromStr};
 
 use chrono::{DateTime, Local, TimeZone};
 use rand::{
-    distributions::{Standard, Uniform},
+    distributions::{Alphanumeric, DistString, Standard, Uniform},
     prelude::Distribution,
     seq::SliceRandom,
 };
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 
 use thousands::Separable;
+
+use crate::components::errors::Errors;
 
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct User {
@@ -18,9 +20,10 @@ pub struct User {
     pub preferred_coin: Coin,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Contact {
     pub id: u32,
+    pub user_id: u32,
     pub name: String,
 }
 
@@ -40,11 +43,13 @@ pub struct DateDivision {
 #[derive(Debug, Default, Clone)]
 pub struct Debt {
     pub id: u32,
+    pub user_id: u32,
     pub contact: Contact,
     pub amount: MoneyAmount,
     pub debt_type: DebtType,
     pub date: DateTime<Local>,
     pub is_paid: bool,
+    pub description: String,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -96,9 +101,9 @@ impl Display for MoneyAmount {
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Coin {
     #[default]
+    Unknown,
     Quetzal,
     Dollar,
-    Unknown,
 }
 
 impl Display for Coin {
@@ -118,6 +123,26 @@ impl Coin {
             Coin::Dollar => "USD",
             Coin::Unknown => "Unknown",
         }
+    }
+}
+
+impl From<&str> for Coin {
+    fn from(value: &str) -> Self {
+        convert_str_to_coin(value)
+    }
+}
+
+impl From<String> for Coin {
+    fn from(value: String) -> Self {
+        convert_str_to_coin(&value)
+    }
+}
+
+fn convert_str_to_coin(s: &str) -> Coin {
+    match s {
+        "GTQ" => Coin::Quetzal,
+        "USD" => Coin::Dollar,
+        _ => Coin::Unknown,
     }
 }
 
@@ -163,9 +188,10 @@ impl Distribution<Coin> for Standard {
 impl Distribution<Contact> for Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Contact {
         let id = rng.gen();
+        let user_id = rng.gen();
         let name = NAMES.choose(rng).unwrap().to_string();
 
-        Contact { id, name }
+        Contact { id, user_id, name }
     }
 }
 
@@ -185,10 +211,12 @@ impl Distribution<Debt> for Standard {
         let seconds = minute_dist.sample(rng);
 
         let id = rng.gen();
+        let user_id = rng.gen();
         let debt_type = rng.gen();
         let contact = rng.gen();
         let is_paid = rng.gen();
         let amount = rng.gen();
+        let description = Alphanumeric.sample_string(rng, 60);
         log::debug!(
             "Trying to create date: {}/{}/{}T{}:{}:{}",
             year,
@@ -205,11 +233,13 @@ impl Distribution<Debt> for Standard {
 
         Debt {
             id,
+            user_id,
             contact,
             amount,
             debt_type,
             date,
             is_paid,
+            description,
         }
     }
 }
